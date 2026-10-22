@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PAROLANDO · Arcade Italia</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--g:#f39c12;--cr:#fdfbf7;--rd:#c0392b;--gr:#27ae60;--nv:#1a252c;--sauce:#d9381e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%}
+body{font:11px/1.6 'Press Start 2P',monospace;color:var(--cr);background:#0b1633;overflow:hidden;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+body.m{background:radial-gradient(ellipse at 50% 40%,transparent 35%,rgba(20,10,10,.7)),repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 2px,transparent 2px 6px),repeating-conic-gradient(#b3262e 0 25%,#f6efe0 0 50%) 0 0/64px 64px}
+body.m #bg{display:none}
+#bg{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;z-index:-1}
+#top{display:flex;justify-content:flex-end;gap:10px;padding:12px 16px;z-index:30;position:relative}
+.scr{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:10px;text-align:center;overflow:auto}
+.scr.on{display:flex}
+.p{position:relative;background:var(--nv);padding:18px 14px 14px;max-width:560px;width:calc(100% - 16px);border:4px solid #000;box-shadow:0 0 0 4px var(--g),10px 14px 0 0 rgba(0,0,0,.6)}
+.p::before,.b::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,var(--gr) 33%,var(--cr) 33% 66%,var(--rd) 66%)}
+.b::before{height:3px}
+
+h1.title-main{
+  position:relative;
+  z-index:25;
+  font-size:clamp(26px,7.5vw,48px);
+  margin:4px 0 0 0;
+  color:var(--g);
+  text-shadow:4px 4px 0 var(--sauce),7px 7px 0 #000;
+  animation:bob 1.8s steps(4) infinite;
+  letter-spacing:2px;
+}
+@keyframes bob{50%{transform:translateY(-5px)}}
+
+.b{--c:#8b5a2b;--d:#3a2210;position:relative;overflow:hidden;font:inherit;color:var(--cr);display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;padding:10px 16px;border:3px solid #2a1408;background:linear-gradient(rgba(255,255,255,.2),transparent 50%,rgba(0,0,0,.2)),var(--c);box-shadow:inset 0 3px 0 rgba(255,255,255,.4),inset 0 -4px 0 rgba(0,0,0,.3),0 5px 0 var(--d),0 8px 0 #000;text-shadow:2px 2px 0 rgba(0,0,0,.5);cursor:pointer;transition:transform .1s}
+.b:hover{transform:translateY(-2px);filter:brightness(1.1)}.b:active{transform:translateY(4px);box-shadow:none}
+.g{--c:#27ae60;--d:#145a32}.y{--c:#f39c12;--d:#b7950b;color:#1a252c;text-shadow:none}.ln{--c:#27ae60;--d:#145a32}.ig{--c:#c13584;--d:#6d1a49}.gh{--c:#3b4252;--d:#171b24}.rv{--c:#0070eb;--d:#0a3e82}.rd{--c:#c0392b;--d:#641e16}
+.sm{padding:7px 10px;font-size:9px}
+.ic{display:inline-flex;align-items:center}.ic svg{display:block}
+.cup{animation:bob .8s steps(2) infinite}
+.coin{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,#f39c12 55%,#b7950b);border:2px solid #3a2210;animation:sp 1.2s linear infinite}@keyframes sp{to{transform:rotateY(360deg)}}
+.s0{display:none}.mu .s0{display:inline-flex}.mu .s1{display:none}
+.fl{display:block;width:32px;height:22px;border:3px solid #000}
+.fl.it{background:linear-gradient(90deg,#009246 33%,#fff 33% 66%,#ce2b37 66%)}
+.fl.en{background:linear-gradient(#c8102e,#c8102e) center/100% 20% no-repeat,linear-gradient(#c8102e,#c8102e) center/20% 100% no-repeat,linear-gradient(#fff,#fff) center/100% 40% no-repeat,linear-gradient(#fff,#fff) center/40% 100% no-repeat,#012169}
+#tip{position:fixed;display:none;z-index:99;pointer-events:none;max-width:250px;background:#fbf3dc;color:#3a2210;padding:9px;font-size:9px;border:3px solid #2a1408;box-shadow:4px 4px 0 var(--rd)}
+
+/* MINI POP-UP VOLUME DAL TASTO SUONO */
+#volPopover{
+  display:none;
+  position:absolute;
+  top:calc(100% + 8px);
+  right:16px;
+  background:#1a252c;
+  border:3px solid #000;
+  box-shadow:0 0 0 3px var(--g), 6px 6px 0 rgba(0,0,0,0.6);
+  padding:10px;
+  width:180px;
+  z-index:100;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+}
+#volPopover.on{display:flex}
+.vol-slider{
+  -webkit-appearance:none;
+  width:100%;
+  height:10px;
+  background:#2a1408;
+  border:2px solid var(--g);
+  outline:none;
+}
+.vol-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:16px;
+  height:20px;
+  background:var(--rd);
+  border:2px solid #fff;
+  cursor:pointer;
+  box-shadow:0 2px 0 #000;
+}
+
+/* SCATOLA PIZZA ED APERTURA IN AVANTI / ALTO */
+.bx{
+  --s:min(72vw,310px,38vh);
+  position:relative;
+  width:var(--s);
+  aspect-ratio:1;
+  perspective:1200px;
+  perspective-origin:50% 100%;
+  margin:12px auto 6px;
+  z-index:10;
+}
+.in{position:absolute;inset:0;background:#d4a373;border:5px solid #5b3a1e;box-shadow:0 0 0 4px #2a1408,10px 14px 0 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;overflow:hidden}
+#pz{width:90%;height:90%;image-rendering:pixelated;position:absolute;inset:5%;z-index:1}
+
+/* Coperchio */
+.lid{
+  position:absolute;
+  inset:0;
+  transform-origin:top center;
+  transform-style:preserve-3d;
+  transition:transform 1.6s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  box-shadow:0 -10px 25px rgba(0,0,0,.6);
+  z-index:20;
+}
+.lid.open{
+  transform:rotateX(130deg) translateY(-20px);
+  pointer-events:none;
+}
+.lf,.lb{position:absolute;inset:0;backface-visibility:hidden;border:6px solid #5c3a21;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px}
+.lf{background:repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 4px,transparent 4px 12px),#e9edc9;color:var(--sauce);font-size:clamp(12px,4vw,18px);text-shadow:2px 2px 0 var(--cr)}
+.lf::before{content:"";position:absolute;left:0;right:0;top:62%;height:10px;background:linear-gradient(90deg,var(--gr) 33%,var(--cr) 33% 66%,var(--rd) 66%)}
+.lb{background:#c99a5b;transform:rotateX(180deg);color:var(--cr);font-size:12px}
+
+/* OVERLAY TRANCI TRASPARENTI SOPRA IL CANVAS DELLA PIZZA */
+.pizza-slices-overlay{
+  position:absolute;
+  inset:5%;
+  z-index:2;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr;
+  gap:2px;
+  border-radius:50%;
+  overflow:hidden;
+}
+.slice{
+  position:relative;
+  background:rgba(0,0,0,0.01);
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  transition:transform .2s, background .2s, filter .2s;
+}
+.slice:hover{
+  background:rgba(255, 235, 59, 0.28);
+  backdrop-filter:brightness(1.2);
+  filter:drop-shadow(0 0 6px rgba(243,156,18,0.8));
+  z-index:5;
+}
+.slice.tl:hover{transform:scale(1.06) translate(-3px,-3px)}
+.slice.tr:hover{transform:scale(1.06) translate(3px,-3px)}
+.slice.bl:hover{transform:scale(1.06) translate(-3px,3px)}
+.slice.br:hover{transform:scale(1.06) translate(3px,3px)}
+
+.slice-title{
+  position:relative;
+  z-index:2;
+  font-size:clamp(8px,2.2vw,10.5px);
+  color:#fff;
+  text-shadow:2px 2px 0 #900c3f, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  transition:transform .2s, color .2s;
+  background:rgba(0,0,0,0.4);
+  padding:2px 5px;
+  border-radius:4px;
+}
+.slice:hover .slice-title{
+  color:#fff3b0;
+  transform:scale(1.12);
+  background:rgba(192, 57, 43, 0.85);
+  text-shadow:2px 2px 0 #000;
+}
+
+#pauseModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(11,22,51,0.85);
+  backdrop-filter:blur(3px);
+  z-index:100;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+#pauseModal.on{display:flex}
+
+#hud{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;width:100%;max-width:560px}
+.chip{background:var(--nv);border:3px solid var(--g);padding:5px 8px;color:var(--g);font-size:9px}
+#barw{width:calc(100% - 16px);max-width:560px;height:12px;background:#2a1408;border:2px solid var(--cr)}#bar{height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--g) 0 8px,#d68910 8px 10px)}
+#key{font-size:clamp(11px,3.2vw,16px)}#ks{color:var(--g);font-size:clamp(22px,7vw,36px);display:block;text-shadow:3px 3px 0 var(--rd),5px 5px 0 #000}
+#inp{min-height:32px;font-size:clamp(15px,4.5vw,24px);letter-spacing:2px;margin:6px 0;text-transform:uppercase;animation:cr 1s steps(2) infinite}@keyframes cr{50%{opacity:.6}}
+#msg{min-height:14px;font-size:9px}
+#hint{display:none;max-width:560px;width:calc(100% - 16px);padding:8px 10px;background:linear-gradient(rgba(255,255,255,.2),transparent 50%,rgba(0,0,0,.2)),var(--rd);border:3px solid #2a1408;box-shadow:inset 0 0 0 2px var(--g),0 4px 0 #6b1e14,0 6px 0 #000;font-size:8.5px;line-height:1.7}
+#hint:not(:empty){display:block}
+#lb{display:flex;gap:8px;align-items:flex-end;justify-content:center;min-height:90px;flex-wrap:wrap}
+.pl{display:flex;flex-direction:column;align-items:center;gap:3px}.pl canvas{image-rendering:pixelated;animation:bob 1.6s steps(2) infinite}
+.nm{max-width:80px;text-align:center;font-size:6.5px;line-height:1.3}.bd{background:var(--nv);border:2px solid var(--g);padding:2px 4px;font-size:6.5px;color:var(--g)}
+.sk{animation:sk .3s}@keyframes sk{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.row{display:flex;gap:10px;align-items:center;text-align:left;margin:6px 0;font-size:8.5px;line-height:1.5}.row canvas{image-rendering:pixelated;height:48px;flex:none}.row i{color:var(--g);font-style:normal;display:block}
+
+/* TASTIERA MOBILE TEMIZZATA PIZZA A TEMA arcade (QWERTY) */
+#kb{
+  display:none;
+  width:100%;
+  max-width:480px;
+  padding:6px;
+  flex-direction:column;
+  gap:5px;
+  background:#2a1408;
+  border:3px solid var(--g);
+  box-shadow:0 -4px 0 #000;
+  margin-top:auto;
+}
+body.touch #kb{display:flex} /* VISIBILE SOLO SU DISPOSITIVI TOUCH / MOBILE */
+
+.kr{display:flex;gap:4px;justify-content:center}
+.k{
+  font:inherit;
+  font-size:clamp(10px, 3.2vw, 13px);
+  flex:1;
+  max-width:40px;
+  height:44px;
+  padding:0;
+  color:#3a2210;
+  text-transform:uppercase;
+  border:2px solid #000;
+  background:linear-gradient(#fbf3dc, #f3cd7a);
+  box-shadow:inset 0 2px 0 #fff, 0 3px 0 #b9822a, 0 5px 0 #000;
+  cursor:pointer;
+  border-radius:3px;
+}
+.k.w{
+  max-width:60px;
+  flex:1.5;
+  background:linear-gradient(#e63946, #c0392b);
+  color:#fff;
+  text-shadow:1px 1px 0 #000;
+  box-shadow:inset 0 2px 0 #ff8e8e, 0 3px 0 #781c12, 0 5px 0 #000;
+}
+.k:active{
+  transform:translateY(3px);
+  box-shadow:0 0 0 #b9822a, 0 2px 0 #000;
+  background:#f4c94a;
+}
+.lk{display:flex;flex-direction:column;gap:12px;align-items:stretch;margin-top:8px}
+.ft{display:flex;gap:10px;justify-content:center;margin-top:2px}.ft .ic svg{height:15px;width:auto}#bub{min-height:12px;font-size:7.5px;line-height:1.5;max-width:560px;padding:0 8px}
+</style></head><body class="m">
+<canvas id="bg"></canvas><div id="tip"></div>
+
+<div id="top">
+  <button class="b sm gr" onclick="toggleAudioPopover(event)" data-tt="tt_aud"><i class="ic s1" data-ic="spk"></i><i class="ic s0" data-ic="mut"></i></button>
+  <button class="b y sm" onclick="flip()" data-tt="tt_lang"><i class="fl it"></i></button>
+
+  <!-- MINI POPOVER VOLUME PIXEL ART -->
+  <div id="volPopover">
+    <div style="font-size:8px; color:var(--g)">AUDIO VOLUME</div>
+    <input type="range" min="0" max="100" value="50" class="vol-slider" id="volRange" oninput="setVolume(this.value)">
+    <div style="display:flex; gap:6px; width:100%; justify-content:space-between; align-items:center">
+      <span id="volVal" style="font-size:8px; color:#fff">50%</span>
+      <button class="b sm y" style="padding:3px 6px; font-size:7px" onclick="toggleMuteBtn()" id="mutePopBtn">MUTE</button>
+    </div>
+  </div>
+</div>
+
+<section class="scr on" id="menu">
+<h1 class="title-main">PAROLANDO</h1>
+
+<!-- SCATOLA PIZZA CON CANVAS GRAFICO ED OVERLAY TRANCI -->
+<div class="bx">
+  <div class="in">
+    <canvas id="pz" width="64" height="64"></canvas>
+    <div class="pizza-slices-overlay">
+      <div class="slice tl" onclick="start(diff)" data-tt="tt_play">
+        <i class="ic" data-ic="play"></i>
+        <span class="slice-title" data-i="play">GIOCA</span>
+      </div>
+      <div class="slice tr" onclick="lvl()" data-tt="tt_lvl">
+        <i class="ic" data-ic="chili"></i>
+        <span class="slice-title" id="dl">MEDIO</span>
+      </div>
+      <div class="slice bl" onclick="toggleAudioPopover(event)" data-tt="tt_aud">
+        <i class="ic s1" data-ic="spk"></i><i class="ic s0" data-ic="mut"></i>
+        <span class="slice-title" data-i="aud">AUDIO</span>
+      </div>
+      <div class="slice br" onclick="show('cred')" data-tt="tt_cred">
+        <i class="ic" data-ic="star"></i>
+        <span class="slice-title" data-i="cred">CREDITI</span>
+      </div>
+    </div>
+  </div>
+  <div class="lid" id="lid">
+    <div class="lf">PAROLANDO · PIZZERIA</div>
+    <div class="lb">PAROLANDO</div>
+  </div>
+</div>
+
+<a class="b rv" href="https://revolut.me/caldarola08" target="_blank" rel="noopener" data-tt="tt_don"><i class="ic cup" data-ic="cup"></i><span data-i="don"></span><i class="coin"><i class="ic" data-ic="heart"></i></i></a>
+<div class="ft">
+  <a class="b sm ln" href="https://linktr.ee/giuscald" target="_blank" rel="noopener" data-tt="tt_ln"><i class="ic" data-ic="tree"></i></a>
+  <a class="b sm ig" href="https://instagram.com/gius.cald" target="_blank" rel="noopener" data-tt="tt_ig"><i class="ic" data-ic="ig"></i></a>
+  <a class="b sm gh" href="https://github.com/Seneoo" target="_blank" rel="noopener" data-tt="tt_gh"><i class="ic" data-ic="gh"></i></a>
+</div>
+</section>
+
+<section class="scr" id="vs">
+<h1 style="font-size:clamp(18px,6vw,28px)" data-i="vs"></h1>
+<div class="p" id="vsl"></div>
+<button class="b rd" data-tt="tt_go" onclick="go()"><i class="ic" data-ic="play"></i><span data-i="go"></span></button>
+</section>
+
+<section class="scr" id="cred">
+<div class="p"><div data-i="made"></div>
+<div class="lk">
+<a class="b ln" href="https://linktr.ee/giuscald" target="_blank" rel="noopener" data-tt="tt_ln"><i class="ic" data-ic="tree"></i>Linktree · giuscald</a>
+<a class="b ig" href="https://instagram.com/gius.cald" target="_blank" rel="noopener" data-tt="tt_ig"><i class="ic" data-ic="ig"></i>Instagram · gius.cald</a>
+<a class="b gh" href="https://github.com/Seneoo" target="_blank" rel="noopener" data-tt="tt_gh"><i class="ic" data-ic="gh"></i>GitHub · Seneoo</a>
+<a class="b rv" href="https://revolut.me/caldarola08" target="_blank" rel="noopener" data-tt="tt_don"><i class="ic cup" data-ic="cup"></i><span data-i="don"></span><i class="coin"><i class="ic" data-ic="heart"></i></i></a>
+</div></div>
+<button class="b sm" data-tt="tt_home" onclick="show('menu')"><i class="ic" data-ic="back"></i><span data-i="home"></span></button>
+</section>
+
+<!-- GAME SCREEN -->
+<section class="scr" id="game">
+<div id="hud">
+  <button class="b sm" onclick="show('menu')" data-tt="tt_home"><i class="ic" data-ic="back"></i></button>
+  <button class="b sm y" onclick="togglePause()" data-tt="tt_pause">⏸️</button>
+  <span class="chip" id="tm"></span>
+  <span class="chip" id="sc"></span>
+  <a class="b rv sm" href="https://revolut.me/caldarola08" target="_blank" rel="noopener" data-tt="tt_don"><i class="ic cup" data-ic="cup"></i></a>
+</div>
+<div id="barw"><div id="bar"></div></div>
+<div class="p"><div id="key"><span id="kl"></span><span id="ks"></span></div><div id="inp"></div><div id="msg"></div></div>
+<div id="hint"></div><div id="bub"></div>
+<div id="lb"></div>
+<div id="kb"></div>
+</section>
+
+<section class="scr" id="end">
+<h1 id="et" style="font-size:clamp(16px,5vw,28px)"></h1><div class="p" id="res"></div>
+<button class="b rd" data-tt="tt_go" onclick="start(diff)"><i class="ic" data-ic="play"></i><span data-i="again"></span></button>
+<button class="b gr sm" data-tt="tt_home" onclick="show('menu')"><i class="ic" data-ic="back"></i><span data-i="home"></span></button>
+</section>
+
+<!-- OVERLAY PAUSA -->
+<div id="pauseModal">
+  <div class="p" style="max-width:320px; text-align:center">
+    <h2 style="color:var(--g); margin:0 0 12px 0; font-size:18px">IN PAUSA</h2>
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <button class="b g" onclick="togglePause()">▶ RIPRENDI</button>
+      <button class="b rd" onclick="togglePause(); show('menu')">◀ MENU PRINCIPALE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],W_=s=>s.trim().split(/\s+/);
+const IT=W_(`pizza spaghetti gelato venezia gondola colosseo roma bari mare sole pasta lasagna tiramisu espresso cappuccino ciao amore bellissimo montagna castello piazza fontana vino formaggio mozzarella basilico pomodoro olio limone arancia fragola cioccolato biscotto panino focaccia risotto gnocchi ravioli tortellini prosciutto salame pecorino ricotta panna zucchero farina uovo burro pepe aglio cipolla carota patata melanzana zucchina peperone fungo oliva barca porto spiaggia onda pesce polpo cozza gambero vela faro isola scoglio nave marinaio pescatore statua colonna arco tempio foro gladiatore imperatore senato legione strada ponte canale palazzo basilica chiesa campanile cupola affresco museo teatro opera musica chitarra mandolino tarantella carnevale maschera arlecchino vespa ferrari bici viaggio treno stazione biglietto valigia vacanza festa famiglia nonna nonno mamma amico caffe cornetto aperitivo spritz limoncello grappa birra acqua latte miele noce mandorla pistacchio arte storia citta paese regione fiume lago collina vulcano deserto bosco foresta prato fiore rosa giglio girasole albero pino ulivo cipresso quercia vigna uva grappolo frutta mela pera pesca albicocca ciliegia banana ananas melone anguria fico mirtillo lampone nocciola castagna zucca spinaci insalata rucola lenticchie fagioli ceci piselli riso pane grissino piadina arancino cannolo cassata panettone pandoro torrone amaretto cantucci zeppola sfogliatella crostata brioche granita sorbetto affogato macchiato ristretto amaro prosecco chianti barolo lambrusco spremuta tavola forchetta coltello cucchiaio piatto bicchiere bottiglia pentola padella cucina ristorante trattoria osteria pizzeria gelateria pasticceria panificio mercato bottega negozio piazzetta vicolo scalinata balcone finestra tetto terrazza giardino cortile cancello portone campana orologio duomo pantheon vaticano pompei etna vesuvio capri sicilia sardegna toscana puglia calabria napoli milano torino firenze genova palermo bologna verona siena pisa trullo trulli alberobello polignano matera lecce otranto gargano salento pulcinella tenore soprano maestro pittore scultore poeta scrittore leonardo michelangelo raffaello galileo gabbiano delfino balena tartaruga medusa riccio stella conchiglia sabbia ombrellone sdraio costume cappello occhiali crema gesto mano pollice basta andiamo allora magari dai forza bravo bravissimo grazie prego scusi salute auguri brindisi sorriso abbraccio bacio cuore passione sogno magia luna cielo nuvola vento pioggia tempesta arcobaleno neve ghiaccio fuoco lambretta motorino bicicletta autobus tram taxi aereo elicottero battello traghetto barchetta zattera gatto cane cavallo mucca pecora capra maiale gallina gallo anatra oca coniglio volpe lupo orso aquila falco civetta farfalla ape formica ragno scuola libro penna matita quaderno lavagna maestra studente amicizia fratello sorella cugino zio zia bambino ragazzo ragazza signore signora vicino compagno cantante ballerino pittura scultura poesia romanzo racconto favola leggenda mistero tesoro avventura coraggio fortuna pazienza simpatia allegria tristezza silenzio rumore canzone ballo serenata chitarrista violino pianoforte tamburo tromba flauto orchestra concerto sipario sera notte alba tramonto mattina pomeriggio domenica lunedi martedi venerdi sabato estate inverno primavera autunno`);
+const EN=W_(`sunny ocean harbor pasta travel island boat wave beach castle bridge market garden window kitchen mountain river forest coffee cheese tomato lemon orange butter sugar flour garlic onion carrot potato mushroom olive lobster shrimp octopus anchor captain sailor pirate treasure compass lighthouse gondola statue column temple forum arena emperor senate legion street canal palace church tower dome museum theatre music guitar carnival mask scooter engine train station ticket suitcase holiday party family grandma friend breakfast dinner cookie biscuit chocolate strawberry banana pepper cinnamon honey almond walnut yellow purple pizza apple peach cherry grape melon mango berry pumpkin spinach lettuce bread toast noodle soup salad sandwich burger cake candy cream sauce spice basil oregano rosemary vanilla caramel journey voyage tourist passport airport flight plane taxi bicycle motorbike highway road path trail tunnel village city town country region valley hill desert volcano cave lake pond stream waterfall meadow field flower rose lily tulip sunflower tree pine cypress oak vineyard horse sheep goat chicken duck goose rabbit wolf bear eagle owl butterfly spider dolphin whale turtle jellyfish seagull crab starfish shell sand umbrella sunglasses cloud wind rain storm rainbow snow ice fire thunder lightning sunshine moonlight star planet smile hug kiss heart passion dream magic wonder laughter adventure memory courage fortune patience silence noise song dance serenade violin piano drum trumpet flute orchestra concert curtain evening night sunrise sunset morning afternoon sunday monday tuesday friday saturday school book pencil notebook teacher student brother sister cousin uncle aunt child boy girl neighbor singer painter sculptor poet writer novel story fable legend mystery table fork knife spoon plate glass bottle pot pan restaurant bakery shop alley stairs balcony roof terrace courtyard gate clock bell fountain tourist guide cruise ferry raft pier dock cliff lagoon island marble fresco ancient history culture tradition festival parade costume mustache gesture whisper shout giggle breeze harvest orchard grove`);
+IT.push(...W_(` lavoro ufficio banca posta telefono computer schermo tastiera internet radio cinema film attore regista spettacolo circo clown mago giocoliere acrobata giostra palloncino regalo torta candela compleanno matrimonio sposa sposo anello bouquet corteo processione santo angelo paradiso vendemmia raccolto trattore contadino pastore gregge caciocavallo burrata orecchiette cavatelli panzerotti taralli friselle polpette brasciole parmigiana caponata arrosticini porchetta cotechino zampone polenta fonduta gorgonzola provolone scamorza taleggio mascarpone pesto trofie carbonara amatriciana puttanesca arrabbiata bolognese marinara capricciosa margherita napoletana calzone suppli carciofi asparagi porcini tartufo radicchio finocchio sedano prezzemolo rosmarino salvia origano alloro peperoncino zafferano cannella vaniglia cacao budino semifreddo zabaione forno impasto crosta fetta cameriere conto mancia ricetta`));EN.push(...W_(` office bank telephone computer screen keyboard internet radio cinema movie actor director show circus clown wizard juggler acrobat carousel balloon gift cake candle birthday wedding bride groom ring bouquet procession angel paradise harvest tractor farmer shepherd flock noodles meatball macaroni pesto carbonara margherita calzone artichoke asparagus truffle fennel celery parsley sage mint saffron vanilla cocoa pudding custard sorbet espresso mocha croissant pastry cannoli pistachio hazelnut chestnut coconut pineapple watermelon blueberry raspberry blackberry lime grapefruit apricot plum pear fig tasty crispy golden spicy sweet sour bitter salty fresh warm cozy cloudy windy stormy oven dough crust slice topping recipe chef waiter menu order bill tip office tractor lantern bakery fisherman blanket pillow candle mirror carpet ladder basket barrel anchor rope sail mast deck`));EN.push(...W_(` lemonade orangeade smoothie pancake waffle muffin donut pretzel popcorn cereal yogurt omelette sausage bacon steak salmon tuna sardine anchovy clam oyster mussel squid cabbage broccoli cucumber zucchini eggplant radish turnip pumpkin beetroot lentil bean pea corn rice bread cracker pie tart jam syrup vinegar mustard ketchup pantry fridge freezer blender toaster kettle teapot saucer napkin tablecloth apron chimney fireplace staircase doorway hallway bedroom bathroom attic cellar lawn fence hedge puddle pebble boulder canyon glacier meadow orchard swamp jungle savanna tundra island archipelago peninsula bay gulf strait cape reef lagoon pearl coral seaweed plankton current tide breeze gale hurricane drizzle fog mist frost dew`));const A=new Set([...IT,...EN]);
+const V=new Set(A),sf=x=>x.split(" ");
+const SU={a:sf("o i a iamo ate ano avo avi ava avamo avate avano ero erai era eremo erete eranno erei eresti erebbe eremmo ereste erebbero ando ato ata ati are ino assi asse assimo aste assero"),e:sf("o i e iamo ete ono evo evi eva evamo evate evano ero erai era eremo erete eranno erei eresti erebbe eremmo ereste erebbero endo uto uta uti ute ere a ano essi esse essimo este essero"),i:sf("o i e iamo ite ono ivo ivi iva ivamo ivate ivano iro irai ira iremo irete iranno irei iresti irebbe iremmo ireste irebbero endo ito ita iti ite ire a ano issi isse issimo iste issero")};
+sf("cant parl ball lavor cammin compr aspett cucin guard pens ascolt trov sogn nuot port chiam ordin arriv entr abit lanci pregh impar insegn domand mostr ricord desider ammir ador aiut salt suon rispett danz organizz respir sper imagin form lav regal invit ripos salv scherz chiacchier brind cost fum gett mand tir gir rest pass").forEach(x=>SU.a.forEach(y=>V.add(x+y)));
+sf("vend cred ripet ricev perd rispond tem batt mett corr").forEach(x=>SU.e.forEach(y=>V.add(x+y)));
+sf("dorm part sent serv apr segu vest offr avvert fugg").forEach(x=>SU.i.forEach(y=>V.add(x+y)));
+sf("ross ner bell nuov alt bass amar piccol buon cald fredd stran car pien vuot lent allegr tranquill pover brav mort viv rapid grass magr").forEach(x=>sf("o a i e").forEach(y=>V.add(x+y)));
+IT.forEach(w=>{const c=w.slice(-1),b=w.slice(0,-1);if(c=="o"||c=="e")V.add(b+"i");if(c=="a")V.add(b+"e")});
+EN.forEach(w=>V.add(/(s|x|ch|sh)$/.test(w)?w+"es":/[^aeiou]y$/.test(w)?w.slice(0,-1)+"ies":w+"s"));
+sf("play walk talk jump cook paint laugh smile dance love like move live bake race save share stay watch work wash wish turn start visit open listen enjoy answer clean climb count cover dream follow fill kick lift mix pick pull push rain reach roll shout sail show sound taste thank touch trust wait want warm yell").forEach(w=>{const e=w.endsWith("e");[w,w+"s",e?w+"d":w+"ed",e?w.slice(0,-1)+"ing":w+"ing"].forEach(x=>V.add(x))});
+sf("warm cold fast slow quick quiet loud bright dark soft hard sweet fresh clean rich poor young old tall short long small tiny huge kind brave proud calm").forEach(w=>[w,w+"er",w+"est",w+"ly"].forEach(x=>V.add(x)));
+const WC={};
+async function wik(w){if(w in WC)return WC[w];for(const l of["it","en"]){try{const r=await fetch(`https://${l}.wiktionary.org/w/api.php?action=query&titles=${w}&format=json&origin=*`),j=await r.json();if(!("-1" in j.query.pages))return WC[w]=1}catch(e){}}return WC[w]=0}
+
+const T={it:{chk:"Controllo nel vocabolario…",aud:"AUDIO",lang:"LINGUA",d0:"FACILE",d1:"MEDIO",d2:"DURO",tt_lvl:"Cambia la difficoltà dei bot: turisti, locali o nonne.",sub:"Il giro d’Italia a colpi di parole",play:"GIOCA",cred:"CREDITI",home:"MENU",don:"Offrimi un caffè",pick:"Scegli la difficoltà dei bot",easy:"FACILE · Turisti",med:"MEDIO · Locali",hard:"DIFFICILE · Nonne",made:"Fatto con passione da Seneo",a1:"SÌ",a0:"NO",round:"Tappa",you:"Tu",ok:"Perfetto, chef!",no:"Mai sentita, nemmeno a Napoli!",nom:"Manca la chiave, furbetto!",dup:"Già detta, svegliati!",short:"Troppo corta, come il caffè!",kk:["Contiene","Inizia con","Finisce con"],again:"RIGIOCA",end:"Fine del viaggio!",win:"Hai vinto: pizza gratis!",lose:"Hai perso: il caffè lo paghi tu!",vs:"Gli sfidanti",go:"VIA!",lv:"LV",hint:"Suggerimento: c’era",try:"Prova con:",tt_play:"Premi qui e parti. Porta l’appetito!",tt_aud:"Musica e suoni: la tarantella digitale.",tt_cred:"Scopri chi ha combinato questo capolavoro.",tt_home:"Scappa al menu, nessuno ti giudica (quasi).",tt_don:"Un caffè al programmatore. Zero pressione, eh!",tt_lang:"Italiano? English? Scegli, ma con eleganza.",tt_easy:"Bot turisti: lenti, sbagliano e chiedono la strada.",tt_med:"Bot locali: ritmo costante, parole decenti.",tt_hard:"Bot nonne: veloci, parole lunghe, zero pietà.",tt_go:"Si parte! Allacciate le forchette.",tt_ln:"Tutti i miei link in un colpo solo. Efficienza italiana!",tt_ig:"Foto, storie e pizze: seguimi!",tt_gh:"Il codice: guardalo, ma non ridere.",tt_pause:"Pausa di gioco"},
+en:{chk:"Checking the dictionary…",aud:"AUDIO",lang:"LANG",d0:"EASY",d1:"MEDIUM",d2:"HARD",tt_lvl:"Change bot difficulty: tourists, locals or grannies.",sub:"Italian road trip, one word at a time",play:"PLAY",cred:"CREDITS",home:"MENU",don:"Buy me an espresso",pick:"Pick the bots’ difficulty",easy:"EASY · Tourists",med:"MEDIUM · Locals",hard:"HARD · Grannies",made:"Made with passion by Seneo",a1:"ON",a0:"OFF",round:"Leg",you:"You",ok:"Perfect, chef!",no:"Never heard of it, not even in Naples!",nom:"Missing the key, smarty!",dup:"Already said, wake up!",short:"Too short, like an espresso!",kk:["Contains","Starts with","Ends with"],again:"PLAY AGAIN",end:"Journey over!",win:"You win: free pizza!",lose:"You lose: you buy the coffee!",vs:"The challengers",go:"GO!",lv:"LV",hint:"Hint: it could have been",try:"Try:",tt_play:"Hit it and go. Bring an appetite!",tt_aud:"Music and sounds: the digital tarantella.",tt_cred:"Meet the mastermind behind this masterpiece.",tt_home:"Run back to the menu, no judgment (almost).",tt_don:"An espresso for the dev. No pressure, really!",tt_lang:"Italiano? English? Pick, but with style.",tt_easy:"Tourist bots: slow, sloppy and lost.",tt_med:"Local bots: steady pace, decent words.",tt_hard:"Granny bots: fast, long words, no mercy.",tt_go:"Off we go! Fasten your forks.",tt_ln:"All my links in one go. Italian efficiency!",tt_ig:"Photos, stories and pizza: follow me!",tt_gh:"The code: look, but don’t laugh.",tt_pause:"Pause game"}};
+let L="it";const t=k=>T[L][k],q=a=>a[L=="it"?0:1];
+const qs=a=>{const l=a[Math.random()*a.length|0].split("|");return l[L=="it"?0:1]};
+const BOTS=[
+{n:"Gino il Pizzaiolo",pre:["Ti impasto di parole!|I’ll knead you with words!","Oggi la pizza la faccio io.|Today I’m making the pizza.","Forno acceso, tastiera pronta!|Oven hot, keyboard ready!"],win:["Cotto a puntino, ciao!|Baked to perfection!","Chi ben impasta, vince!|Who kneads well, wins!","Pizza gratis per me!|Free pizza for me!"],lose:["Mi si è bruciata la pizza…|My pizza got burned…","Colpa della farina, giuro!|The flour’s fault, I swear!","Vabbè, il bis lo offro io.|Fine, seconds are on me."],sc:["Mamma mia, che parola!|Mamma mia, what a word!","Una margherita di lettere!|A margherita of letters!","Questa è arte, amico!|That’s art, my friend!"],re:["Not bad, pasticcione!|Not bad, messy chef!","Hai rubato la mia ricetta?|Did you steal my recipe?","Bravo, ma io sono più cotto.|Nice, but I’m more baked."],ta:["Questa non l’ho mai sentita!|Never heard that one!","Ahi, scotti più della pizza!|Ouch, you’re hotter than the pizza!","Riprova, c’è tempo… forse.|Try again, there’s time… maybe."]},
+{n:"Nonna Pina",pre:["Mangia prima, scrivi dopo.|Eat first, type later.","Ai miei tempi si scriveva a mano.|In my day we wrote by hand.","Ti preparo anche il sugo?|Shall I make you sauce too?"],win:["Hai visto, nipote?|See, dear?","Nonna 1, nipote 0.|Granny 1, grandkid 0.","Adesso mangia, sei magro.|Now eat, you’re too thin."],lose:["Mi si sono appannati gli occhiali.|My glasses fogged up.","Colpa del Wi-Fi, di sicuro.|Must be the Wi-Fi.","Ai miei tempi scrivevo meglio.|In my day I typed better."],sc:["Bravissima la nonna!|Well done, granny!","Questa la ricordo dal ’52.|I remember this one from ’52.","Ecco, e senza occhiali!|And without my glasses!"],re:["Brava, ma sei troppo magra.|Nice, but you’re too thin.","Ti faccio un caffè?|Shall I make you a coffee?","Eh, i giovani di oggi…|Ah, kids these days…"],ta:["Santo cielo, che sbaglio!|Heavens, what a mistake!","Mica si scrive così, tesoro.|That’s not how it’s spelled, dear.","Vuoi un aiutino dalla nonna?|Want a little help from granny?"]},
+{n:"Turi il Pescatore",pre:["Oggi abbocchi tu!|You’re today’s catch!","Il mare mi ha insegnato tutto.|The sea taught me everything.","Ho le reti piene di parole.|My nets are full of words."],win:["Pesce fresco, parole fresche!|Fresh fish, fresh words!","Ho preso il pesce grosso!|I caught the big one!","Offro io… il polpo.|My treat… the octopus."],lose:["Era grossa così… la parola.|It was this big… the word.","Mi è scappata come un’aringa.|It slipped away like a herring.","Domani si va di nuovo a pesca.|Tomorrow we fish again."],sc:["Abbocca, abbocca, ecco!|Bite, bite, got it!","Questa sì che è una cattura!|Now that’s a catch!","Ho tirato su una bellezza!|Reeled in a beauty!"],re:["Hai pescato bene, marinaio.|Good catch, sailor.","Quasi bravo come me.|Almost as good as me.","Il mare ti vuole bene.|The sea likes you."],ta:["Questa sa di scarpa vecchia!|That tastes like an old boot!","Hai preso un’alga, nonun pesce.|You caught seaweed, not a fish.","Rilancia la canna, marinaio!|Recast your line, sailor!"]}];
+const sy=(k,b)=>{b=b||G.p[1+(Math.random()*3|0)];return b.n+": “"+qs(b[k])+"”"};
+function bub(x){const e=$("#bub");e.textContent=x;clearTimeout(G.bt);G.bt=setTimeout(()=>e.textContent="",3200)}
+
+let AC,M,mute=false,st=0,nt=0,paused=false,volLevel=0.5;
+
+function toggleAudioPopover(e){
+  if(e) e.stopPropagation();
+  ac();
+  const pop = $("#volPopover");
+  pop.classList.toggle("on");
+}
+document.addEventListener("click", e=>{
+  if(!e.target.closest("#volPopover") && !e.target.closest("[data-tt='tt_aud']")) {
+    $("#volPopover").classList.remove("on");
+  }
+});
+
+function setVolume(v){
+  volLevel = v / 100;
+  $("#volVal").textContent = v + "%";
+  if(M && !mute) M.gain.setTargetAtTime(volLevel, AC.currentTime, 0.05);
+}
+function toggleMuteBtn(){
+  mute = !mute;
+  if(M) M.gain.setTargetAtTime(mute ? 0 : volLevel, AC.currentTime, 0.05);
+  $("#mutePopBtn").textContent = mute ? "UNMUTE" : "MUTE";
+  apply();
+}
+
+function togglePause(){
+  if(!G||!G.on) return;
+  paused=!paused;
+  $("#pauseModal").classList.toggle("on", paused);
+  if(!paused) ac();
+}
+
+function ac(){
+  if(!AC){
+    AC=new(window.AudioContext||window.webkitAudioContext)();
+    M=AC.createGain();
+    M.gain.value=mute?0:volLevel;
+    const f=AC.createBiquadFilter();
+    f.type="lowpass";
+    f.frequency.value=1800;
+    M.connect(f);
+    f.connect(AC.destination);
+    nt=AC.currentTime+.15;
+    setInterval(sch,80);
+  }
+  if(AC.state=="suspended")AC.resume();
+}
+
+function note(n,t0,d,ty="sine",v=.04){
+  if(!AC||paused||mute)return;
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type=ty;
+  o.frequency.value=440*2**(n/12);
+  g.gain.setValueAtTime(.0001,t0);
+  g.gain.linearRampToValueAtTime(v,t0+.03);
+  g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+  o.connect(g);
+  g.connect(M);
+  o.start(t0);
+  o.stop(t0+d+.05);
+}
+
+const MEL=[[7,12,7],[3,7,3],[0,3,7],[12,7,3],[7,10,7],[2,7,2],[-2,2,7],[10,7,2],[5,8,12],[8,5,0],[3,7,12],[7,3,0],[2,5,10],[7,2,-2],[0,3,7],[12,null,null]];
+const CH=[[-24,[-12,-5]],[-24,[-12,-5]],[-29,[-5,2]],[-24,[-12,-5]],[-19,[-7,0]],[-24,[-12,-5]],[-29,[-5,2]],[-24,[-12,-5]]];
+
+function sch(){
+  if(!AC||paused||mute)return;
+  while(nt<AC.currentTime+.25){
+    const bar=(st/3|0)%16, b=st%3, [r,c]=CH[bar%8], m=MEL[bar][b];
+    if(b==0) note(r,nt,.45,"triangle",.05);
+    else c.forEach(x=>note(x,nt,.2,"sine",.018));
+    if(m!=null) note(m,nt,.25,"sine",.035);
+    st++;
+    nt+=.16;
+  }
+}
+
+function sfx(k){
+  if(!AC||paused)return;
+  const t=AC.currentTime,P=[3,5,7,10,12];
+  if(k=="k")note(P[Math.random()*5|0],t,.08,"sine",.04);
+  else if(k=="c")note(12,t,.06,"sine",.03);
+  else if(k=="o")[7,12,16].forEach((n,i)=>note(n,t+i*.07,.18,"triangle",.05));
+  else if(k=="e"){note(-7,t,.2,"sine",.08);note(-10,t+.1,.25,"sine",.08)}
+  else if(k=="r"){note(7,t,.16,"sine",.05);note(12,t+.1,.22,"sine",.05)}
+  else[0,4,7,12].forEach((n,i)=>note(n,t+i*.1,.4,"triangle",.05));
+}
+
+addEventListener("pointerdown",ac);addEventListener("keydown",ac);
+
+const PAL={K:"#1b1020",W:"#fff",Y:"#ffc83d"};
+const ARW=["K           ","KK          ","KWK         ","KWWK        ","KYWWK       ","KYWWWK      ","KYWWWWK     ","KYWWWWWK    ","KYWWWWWWK   ","KYWWWWKKKKK ","KWWKWWK     ","KWK KWWK    ","KK  KWWK    ","K    KWWK   ","     KWWK   ","      KK    "];
+function mk(sw){const c=document.createElement("canvas");c.width=24;c.height=32;const x=c.getContext("2d");ARW.forEach((r,y)=>[...r].forEach((ch,i)=>{if(ch!=" "){x.fillStyle=PAL[sw&&ch=="W"?"Y":sw&&ch=="Y"?"W":ch];x.fillRect(i*2,y*2,2,2)}}));return c.toDataURL()}
+document.head.appendChild(document.createElement("style")).textContent=`body{cursor:url(${mk(0)}) 0 0,auto}button,a,.k,.slice,[data-tt]{cursor:url(${mk(1)}) 0 0,pointer}`;
+
+const cv=$("#bg"),cx=cv.getContext("2d"),W=256,H=144;cv.width=W;cv.height=H;
+const R=(c,x,y,w,h)=>{cx.fillStyle=c;cx.fillRect(x|0,y|0,w,h)};
+const ST=Array.from({length:50},(_,i)=>[(i*97)%W,(i*53)%64,i%5]);
+function pz(x,y,a){cx.save();cx.translate(x|0,y|0);cx.rotate(a);R("#c8801f",-4,-5,8,2);R("#ffd23f",-3,-3,6,3);R("#ffd23f",-2,0,4,3);R("#ffd23f",-1,3,2,2);R("#e63946",-2,-2,2,1);R("#e63946",0,1,1,1);cx.restore()}
+function bg(s){
+let g=cx.createLinearGradient(0,0,0,86);g.addColorStop(0,"#0b1633");g.addColorStop(.6,"#24427d");g.addColorStop(1,"#f2a65a");cx.fillStyle=g;cx.fillRect(0,0,W,86);
+ST.forEach(([x,y,k])=>{if(Math.sin(s*2+k*3+x)>0)R("#fff",x,y,1,1)});
+R("#fff6c0",212,12,11,11);R("#e8dca0",216,16,3,3);
+for(let i=0;i<3;i++){const x=((s*4+i*90)%(W+60))-30;R("#3a4f86",x,26+i*10,28,4);R("#3a4f86",x+6,23+i*10,16,3)}
+cx.fillStyle="rgba(255,190,90,.14)";cx.fillRect(0,46,80,40);
+R("#7d5a3c",6,52,66,34);R("#946c48",6,52,66,3);
+for(let r=0;r<3;r++)for(let i=0;i<8;i++){R("#4a2e1a",9+i*8,57+r*9,5,7);R(Math.sin(s*3+i*2+r)>-.5?"#ffd86b":"#b9741e",10+i*8,58+r*9,3,5)}
+[84,92,100,108].forEach(x=>{R("#eee6d3",x,64,4,22);R("#cfc5ac",x-1,62,6,3)});R("#cfc5ac",83,60,28,2);
+[78,118].forEach(x=>{R("#4a2e1a",x,66,2,20);R("#2f6b3a",x-5,60,12,5);R("#2f6b3a",x-3,57,8,3)});
+[["#c7634a",126,56,14],["#e8b86a",140,50,12],["#d98a8a",152,58,12],["#8aa6c9",164,52,14]].forEach(([c,x,y,w],j)=>{R(c,x,y,w,86-y);for(let k=0;k<3;k++)R(Math.sin(s*2+j+k)>-.7?"#ffe08a":"#5a4a3a",x+2+k*4,y+4,2,3)});
+R("#b5483a",146,40,8,46);R("#2a8c6a",147,34,6,6);R("#ffd23f",149,30,2,4);
+R("#e8e8e8",224,46,8,40);R("#e63946",224,54,8,5);R("#e63946",224,66,8,5);R("#222",222,42,12,4);R("#ffe14d",225,38,6,4);R("#5a4a3a",196,80,60,6);
+cx.save();cx.translate(228,40);cx.rotate(s*1.4);g=cx.createLinearGradient(0,0,120,0);g.addColorStop(0,"rgba(255,246,170,.55)");g.addColorStop(1,"rgba(255,246,170,0)");cx.fillStyle=g;
+cx.beginPath();cx.moveTo(0,0);cx.lineTo(120,-9);cx.lineTo(120,9);cx.closePath();cx.fill();cx.rotate(Math.PI);cx.beginPath();cx.moveTo(0,0);cx.lineTo(120,-9);cx.lineTo(120,9);cx.closePath();cx.fill();cx.restore();
+g=cx.createLinearGradient(0,86,0,H);g.addColorStop(0,"#1e6fa8");g.addColorStop(1,"#0d3a66");cx.fillStyle=g;cx.fillRect(0,86,W,H-86);
+for(let y=88;y<H;y+=5)for(let x=-10;x<W;x+=10)R("#4a92d4",x+(s*14+y*2)%10,y+Math.sin(s*2+x/9)*1.2,5,1);
+for(let y=88;y<126;y+=3){R("rgba(255,200,100,.2)",8+((y*7+s*20)%62),y,4,1);R("rgba(255,246,192,.45)",214+Math.sin(s*3+y)*4,y,6,1);R("rgba(255,224,138,.25)",128+((y*5+s*12)%44),y,3,1)}
+const gx=110+Math.sin(s/1.4)*45,gy=104+Math.sin(s*2);R("rgba(0,0,0,.35)",gx,gy+4,26,2);R("#222",gx,gy,26,3);R("#222",gx-3,gy-3,3,3);R("#222",gx+26,gy-4,2,5);R("#e63946",gx+9,gy-3,6,3);R("#fff",gx+19,gy-9,2,6);R("#e63946",gx+19,gy-11,2,2);
+for(let i=0;i<3;i++)pz(30+i*70+Math.sin(s+i)*6,124+Math.sin(s*2+i)*2,Math.sin(s+i)*.4);
+for(let i=0;i<7;i++)pz(((s*9+i*46)%(W+30))-15,14+((i*37)%52)+Math.sin(s*2+i)*4,s*.8+i);
+{const k=(s*.5)%4;if(k<.35){const x=200-k*500,y=8+k*160;R("#fff",x,y,2,1);R("rgba(255,255,255,.5)",x+3,y-1,6,1);R("rgba(255,255,255,.25)",x+9,y-2,8,1)}}for(let i=0;i<10;i++)if(Math.sin(s*5+i)>0)R("#fff",(i*71+s*18)%W,(i*29+s*9)%100,1,1)}
+
+function apply(){$$("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));$("#dl").textContent=t("d"+diff);$$(".ch").forEach((c,i)=>c.style.opacity=i<=diff?1:.25);document.body.classList.toggle("mu",mute);document.documentElement.lang=L;if(G){ui();if(G.over)endUi();vsUi()}}
+const tp=$("#tip");
+document.onmouseover=e=>{const el=e.target.closest&&e.target.closest("[data-tt]");if(el){tp.textContent=t(el.dataset.tt);tp.style.display="block"}else tp.style.display="none"};
+document.onmousemove=e=>{tp.style.left=Math.max(4,Math.min(e.clientX+18,innerWidth-260))+"px";tp.style.top=Math.min(e.clientY+22,innerHeight-90)+"px"};
+document.addEventListener("click",e=>{if(e.target.closest("button,a,.slice"))sfx("c")});
+let G=null;
+function show(id){$$(".scr").forEach(s=>s.classList.toggle("on",s.id==id));document.body.classList.toggle("m",id=="menu");const l=$("#lid");l.classList.remove("open");if(id=="menu")setTimeout(()=>l.classList.add("open"),150);if(G)G.on=id=="game"&&!G.over}
+if(matchMedia("(pointer:coarse)").matches||"ontouchstart" in window)document.body.classList.add("touch");
+
+// GENERATORE TASTIERA MOBILE QWERTY
+function key(l,c,w){
+  const b=document.createElement("button");
+  b.className="k"+(w?" w":"");
+  b.textContent=l;
+  b.onpointerdown=e=>{
+    e.preventDefault();
+    if(navigator.vibrate) navigator.vibrate(20); // VIBRAZIONE FEEDBACK TATTILE MOBILE
+    press(c);
+  };
+  return b;
+}
+["qwertyuiop","asdfghjkl","zxcvbnm"].forEach((r,i)=>{
+  const d=document.createElement("div");
+  d.className="kr";
+  [...r].forEach(c=>d.append(key(c,c)));
+  if(i==2){
+    d.prepend(key("DEL","bk",1));
+    d.append(key("OK","en",1));
+  }
+  $("#kb").append(d);
+});
+
+document.addEventListener("keydown",e=>{if(!G||!G.on||e.ctrlKey||e.metaKey||paused)return;if(e.key=="Backspace")press("bk");else if(e.key=="Enter")press("en");else if(/^[a-z]$/i.test(e.key))press(e.key.toLowerCase())});
+
+const BC={s:"#f1c27d",e:"#222",k:"#2a1408",w:"#fff",m:"#3a2210",g:"#cfcfcf",p:"#8a4f9e",f:"#e8667f",y:"#f6c945",r:"#c0392b",b:"#1d4e89",o:"#6b3a1e"};
+const SPR={
+you:[[".....rrrr.....","....rrrrrr....","...rrrrrrrr...","...rrrrrrrr...","...ssssssss...","...sesssses...","...ssssssss...","...sssrrsss...","....ssssss....","..nnnnwwrrrr..",".nnnnnwwwwrrr.",".nnnnnwwwwrrr.",".nnnnnwwwwrrr.",".nnnnnwwwwrrr."],{r:"#c0392b",n:"#27ae60"}],
+gino:[["....wwwwww....","...wwwwwwww...","..wwwwwwwwww..","..wwwwwwwwww..","...rrrrrrrr...","...ssssssss...","...sesssses...","...ssssssss...","..mmmmmmmmmm..","...ssssssss...","....ssssss....","...wwwrrwww...","..wwwwwwwwww..",".wwwwwwwwwwww."],{r:"#c0392b"}],
+nonna:[["....gggggg....","...gggggggg...","..gggggggggg..",".ggggssssgggg.",".gggssssssggg.","..kkkekkkekk..","...ssssssss...","...sssrrsss...","....ssssss....","...pfpppyfp...","..pfppppppfp..",".ppppypppppp..",".pppppppppppp.",".pppppppppppp."],{g:"#e0e0e0",p:"#8a4f9e",f:"#e8667f",y:"#f6c945",r:"#d9604a"}],
+turi:[["....bbbbbb....","...bbbbbbbb...","..bbbbbbbbbb..","...wwwwwwww...","...ssssssss...","...sesssses...","...ssssssss...","...sssmmsssoo.","....sssssskk..","....ssssss....","...wbwbwbwb...","..wbwbwbwbwb..",".bwbwbwbwbwbw.",".wbwbwbwbwbwb."],{b:"#1d4e89",o:"#6b3a1e"}]};
+function av(p,lv){const [rw,cm]=SPR[p.n=="you"?"you":p.n.split(" ")[0].toLowerCase()],s=Math.min(2+lv,5),c=document.createElement("canvas");c.width=14*s;c.height=14*s;const x=c.getContext("2d");rw.forEach((r,y)=>[...r].forEach((ch,i)=>{const col=cm[ch]||BC[ch];if(col){x.fillStyle=col;x.fillRect(i*s,y*s,s,s)}}));return c}
+
+const ROUNDS=8,RT=14;
+const DF=[{i:[4,7],f:.5},{i:[2.5,4.5],f:.25},{i:[1.2,2.5],f:.08}];
+let diff=1;
+const rr=([a,b])=>a+Math.random()*(b-a),mt=(w,k)=>k.ty==0?w.includes(k.s):k.ty==1?w.startsWith(k.s):w.endsWith(k.s);
+const score=w=>w.length*10+[...w].filter(c=>"zqxkjwyh".includes(c)).length*15;
+const cand=()=>[...A].filter(w=>w.length>2&&mt(w,G.k)&&!G.used.has(w));
+function start(d){ac();diff=d;G={on:0,over:0,r:0,t:0,z:0,inp:"",used:new Set(),k:null,p:[{n:"you",s:0,c:"#ffb703",h:"#ffb703"},...BOTS.map(b=>({...b,s:0,nx:0}))]};vsUi();show("vs")}
+function vsUi(){const v=$("#vsl");v.innerHTML="";BOTS.forEach(b=>{const r=document.createElement("div");r.className="row";r.append(av(b,1));const d=document.createElement("div");d.innerHTML=`${b.n}<i>“${qs(b.pre)}”</i>`;r.append(d);v.append(r)})}
+function go(){show("game");G.on=1;nextRound()}
+function nextRound(){if(++G.r>ROUNDS)return end();G.t=RT;G.z=0;G.used=new Set();G.inp="";$("#hint").textContent="";$("#msg").textContent="";
+const pool=L=="it"?IT:EN,w=pool[Math.random()*pool.length|0],ty=Math.random()*3|0;
+G.k={ty,s:ty==0?w.substr(Math.random()*(w.length-1)|0,2):ty==1?w.slice(0,2):w.slice(-2)};
+G.p.forEach((b,i)=>i&&(b.nx=rr(DF[diff].i)));ui();sfx("r")}
+function botWord(b){const c=cand().sort((x,y)=>x.length-y.length);if(!c.length)return;const w=c[diff==0?0:diff==2?c.length-1:c.length>>1];G.used.add(w);b.s+=score(w);ui();if(Math.random()<.45)bub(sy("sc",b))}
+function hintFull(){const pl=L=="it"?IT:EN;let c=cand();const f=c.filter(w=>pl.includes(w));if(f.length>1)c=f;c=c.sort(()=>Math.random()-.5).slice(0,3);return c.length?t("hint")+" "+c.map(w=>"“"+w.toUpperCase()+"”").join(", "):""}
+function upd(dt){if(paused)return;if(G.z>0){G.z-=dt;if(G.z<=0)nextRound();return}
+G.t-=dt;G.p.forEach((b,i)=>{if(!i)return;b.nx-=dt;if(b.nx<=0){b.nx=rr(DF[diff].i);if(Math.random()>DF[diff].f)botWord(b)}});
+$("#tm").textContent=`${t("round")} ${G.r}/${ROUNDS} · ${Math.max(0,Math.ceil(G.t))}s`;$("#bar").style.width=Math.max(0,G.t/RT*100)+"%";
+if(G.t<=0){G.z=3.6;$("#hint").innerHTML=sy("ta")+"<br>"+hintFull();sfx("e")}}
+function msg(k,x){$("#msg").textContent=(x?"+"+x+" ":"")+t(k);$("#msg").style.color=x?"#8fd19e":"#ff9d8a";if(!x){const i=$("#inp");i.classList.remove("sk");void i.offsetWidth;i.classList.add("sk");sfx("e");const c=cand();if(c.length){const w=c[Math.random()*c.length|0];$("#hint").innerHTML=sy("ta")+"<br>"+t("try")+" "+w[0].toUpperCase()+" _".repeat(w.length-1)}}else{sfx("o")}}
+function press(c){if(G.z>0||paused)return;if(c=="bk")G.inp=G.inp.slice(0,-1);else if(c=="en")submit();else if(G.inp.length<14)G.inp+=c;$("#inp").textContent=G.inp||"_";sfx("k")}
+function award(w){G.used.add(w);const s=score(w);G.p[0].s+=s;msg("ok",s);$("#hint").textContent="";ui();if(Math.random()<.4)bub(sy("re"))}
+function submit(){const w=G.inp;G.inp="";if(w.length<3)return msg("short");if(!mt(w,G.k))return msg("nom");if(G.used.has(w))return msg("dup");if(V.has(w))return award(w);const r=G.r;$("#msg").style.color="#e8b04a";$("#msg").textContent=t("chk");wik(w).then(ok=>{if(G&&G.r==r&&G.on){if(ok&&!G.used.has(w))award(w);else msg("no")}})}
+function ui(){if(!G.k)return;$("#kl").textContent=t("kk")[G.k.ty]+" ";$("#ks").textContent=G.k.s.toUpperCase();$("#inp").textContent=G.inp||"_";$("#sc").textContent="PT "+G.p[0].s;
+const lb=$("#lb");lb.innerHTML="";[...G.p].sort((a,b)=>b.s-a.s).forEach(p=>{const lv=1+(p.s/100|0),d=document.createElement("div");d.className="pl";d.append(av(p,lv));const n=document.createElement("div");n.className="nm";n.textContent=(p.n=="you"?t("you"):p.n);const s=document.createElement("div");s.className="bd";s.textContent=t("lv")+lv+" · "+p.s;d.append(n,s);lb.append(d)})}
+function end(){G.over=1;G.on=0;show("end");endUi();sfx("w")}
+function endUi(){const o=[...G.p].sort((a,b)=>b.s-a.s);$("#et").textContent=t("end");const r=$("#res");r.innerHTML="";
+o.forEach((p,i)=>{const d=document.createElement("div");d.className="row";d.append(av(p,1+(p.s/100|0)));const x=document.createElement("div");const you=p.n=="you";x.innerHTML=`${i+1}. ${you?t("you"):p.n} — ${p.s} (${t("lv")}${1+(p.s/100|0)})<i>${you?"":"“"+qs(i==0?p.win:p.lose)+"”"}</i>`;d.append(x);r.append(d)});
+const m=document.createElement("div");m.style.marginTop="12px";m.textContent=t(o[0].n=="you"?"win":"lose");r.append(m)}
+let lt=0;function loop(ms){const s=ms/1000,dt=Math.min(s-lt,.1);lt=s;bg(s);if(G&&G.on)upd(dt);requestAnimationFrame(loop)}
+
+const ICO={};
+function mkI(n,rows,cm={}){let q="";rows.forEach((r,y)=>[...r].forEach((c,x)=>{if(c!=" ")q+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${cm[c]||"currentColor"}"/>`}));ICO[n]=`<svg viewBox="0 0 ${rows[0].length} ${rows.length}" width="${rows[0].length*3}" height="${rows.length*3}" shape-rendering="crispEdges">${q}</svg>`}
+mkI("play",["#      ","##     ","###    ","####   ","#####  ","####   ","###    ","##     ","#      "]);
+mkI("back",["    #","   ##","  ###"," ####","#####"," ####","  ###","   ##","    #"]);
+mkI("chili",["     gg ","    ggg ","   ###  ","  ####  "," ####   "," ###    ","##      ","#       "],{"#":"#c0392b",g:"#27ae60"});
+mkI("star",["   ##   ","   ##   ","########"," ###### ","  ####  "," ##  ## "," #    # "]);
+mkI("spk",["   #      ","  ##   #  ","####    # ","####  # # ","####  # # ","####    # ","  ##   #  ","   #      "]);
+mkI("mut",["   #      ","  ##      ","####  #  #","####   ## ","####   ## ","####  #  #","  ##      ","   #      "]);
+mkI("cup",[" s  s       ","  s  s      ","            "," ########   "," #wwwwww##  "," #wwwwww# # "," #wwwwww##  ","  #wwww#    "," ########## "],{"#":"#3a1d0b",w:"#f6efe0",s:"#fff"});
+mkI("heart",[" ## ## ","#######","#######"," ##### ","  ###  ","   #   "],{"#":"#c0392b"});
+mkI("gh",["#       #","##     ##","#########","##  #  ##","#########"," ####### ","  #####  ","  # # #  "]);
+mkI("ig",["########","#      #","#  ##  #","# #  # #","# #  # #","#  ##  #","#      #","########"]);
+mkI("tree",["    #    ","   ###   ","  #####  ","    #    "," ####### ","  #####  ","    #    ","    #    ","    #    "]);
+$$("[data-ic]").forEach(e=>e.innerHTML=ICO[e.dataset.ic]);
+
+/* PIZZA PROCEDURALE HD */
+(function(){
+  const x=$("#pz").getContext("2d");let sd=7;const rn=()=>(sd=sd*16807%2147483647)/2147483647;
+  for(let j=0;j<64;j++)for(let i=0;i<64;i++){
+    const dx=i-31.5,dy=j-31.5,d=Math.hypot(dx,dy);let c=null;
+    if(d<31){
+      c=d>29?"#5b3a14":d>25?(dy<0&&d<27?"#f3cd7a":"#f39c12"):d>23?"#b9822a":"#d9452c";
+      if(d<=23){
+        c=rn()<.12?"#c0392b":"#f4c94a";
+        const a=(Math.atan2(dy,dx)+Math.PI)/(Math.PI/4);
+        if(Math.abs(a-Math.round(a))*d<.8&&d>5)c="#c9962e";
+      }
+    }
+    if(c){x.fillStyle=c;x.fillRect(i,j,1,1);}
+  }
+  x.fillStyle="#27ae60";
+  [[20,14],[44,18],[48,40],[16,42],[30,50],[36,12],[12,28],[52,28]].forEach(([i,j])=>{
+    x.fillRect(i,j,3,2);x.fillRect(i+1,j-1,1,1);
+  });
+})();
+
+function flip(){L=L=="it"?"en":"it";$$(".fl").forEach(f=>{f.className="fl "+L;f.animate([{transform:"rotateY(0)"},{transform:"rotateY(180deg) scale(1.3)"},{transform:"rotateY(360deg)"}],400)});sfx("c");apply()}
+function lvl(){diff=(diff+1)%3;sfx("c");apply()}
+
+apply();show("menu");requestAnimationFrame(loop);
+</script></body></html>
