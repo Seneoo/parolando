@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/STATUS-ACTIVE-success?style=for-the-badge&logo=none" alt="Status">
     <img src="https://img.shields.io/badge/TECH-HTML5%2FCSS3%2FJS-blue?style=for-the-badge" alt="Tech">
     <img src="https://img.shields.io/badge/PLATFORM-WEB_BROWSER-orange?style=for-the-badge" alt="Platform">
-    <img src="https://img.shields.io/badge/LICENSE-MIT-purple?style=for-the-badge" alt="License">
+    <img src="https://img.shields.io/badge/LICENSE-PROPRIETARY-%23c0392b?style=for-the-badge" alt="License">
   </p>
 
 </div>
@@ -37,6 +37,14 @@
 
 <br>
 
+<div style="background: #1a252c; color: #fff; padding: 30px; border: 2px solid #c0392b; box-shadow: 8px 8px 0px #000; font-family: monospace;">
+  <h3 style="text-transform: uppercase; margin-top: 0; color: #c0392b;">🔒 LICENSE / LICENZA</h3>
+  <p><b>[EN]:</b> © Giuseppe Caldarola (Seneoo). All rights reserved. This is a proprietary project. Copying, modifying, distributing, or using this code and its assets in any way, shape, or form is strictly prohibited without explicit written permission.</p>
+  <p><b>[IT]:</b> © Giuseppe Caldarola (Seneoo). Tutti i diritti riservati. Questo è un progetto proprietario. È severamente vietato copiare, modificare, distribuire o utilizzare questo codice e le relative risorse in qualsiasi modo o forma senza previa autorizzazione scritta.</p>
+</div>
+
+<br>
+
 <div align="center">
   <p><b>🔗 LINKS & CONTACTS</b></p>
   <a href="https://linktr.ee/giuscald" target="_blank">
@@ -45,14 +53,8 @@
   <a href="https://instagram.com/gius.cald" target="_blank">
     <img src="https://img.shields.io/badge/Instagram-C13584?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram">
   </a>
-  <a href="https://github.com/Seneoo" target="_blank">
-    <img src="https://img.shields.io/badge/GitHub-171515?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
-  </a>
   <a href="https://revolut.me/caldarola08" target="_blank">
     <img src="https://img.shields.io/badge/Revolut-0070EB?style=for-the-badge&logo=revolut&logoColor=white" alt="Revolut">
-  </a>
-  <a href="mailto:seneo.community@outlook.com">
-    <img src="https://img.shields.io/badge/Email-FF3D5F?style=for-the-badge&logo=gmail&logoColor=white" alt="Email">
   </a>
 </div>
 
